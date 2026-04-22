@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Musicbrainz UI enhancements
 // @description  Various UI enhancements for Musicbrainz
-// @version      2026.2.12.4
+// @version      2026.2.12.4-A
 // @downloadURL  https://raw.githubusercontent.com/murdos/musicbrainz-userscripts/master/mb_ui_enhancements.user.js
 // @updateURL    https://raw.githubusercontent.com/murdos/musicbrainz-userscripts/master/mb_ui_enhancements.user.js
 // @icon         http://wiki.musicbrainz.org/-/images/3/3d/Musicbrainz_logo.png
@@ -39,19 +39,20 @@ function setCopyTitleMenu() {
 }
 setCopyTitleMenu();
 
-// Google search release title: menu command to enable/disable (default enabled)
-function setGoogleSearchMenu() {
+// Search release title: menu command to enable/disable (default enabled)
+// TODO: Make this into a provider choice menu
+function setSearchMenu() {
     if (typeof GM_registerMenuCommand !== 'function') return;
     GM_registerMenuCommand(
-        `${GM_getValue('googleSearchEnabled', true) ? '☑' : '☐'} Google search release title buttons`,
+        `${GM_getValue('SearchEnabled', true) ? '☑' : '☐'} Search release title buttons`,
         function () {
-            GM_setValue('googleSearchEnabled', !GM_getValue('googleSearchEnabled', true));
-            setGoogleSearchMenu();
+            GM_setValue('SearchEnabled', !GM_getValue('SearchEnabled', true));
+            setSearchMenu();
         },
-        { autoClose: false, id: 'googleSearch' },
+        { autoClose: false, id: 'Search' },
     );
 }
-setGoogleSearchMenu();
+setSearchMenu();
 
 $(document).ready(function () {
     // Follow the instructions found at https://www.last.fm/api/authentication
@@ -231,24 +232,24 @@ $(document).ready(function () {
                 marginLeft: '2px',
             });
 
-            if (GM_getValue('googleSearchEnabled', true) && typeof GM_getResourceURL === 'function') {
+            if (GM_getValue('SearchEnabled', true) && typeof GM_getResourceURL === 'function') {
                 const $searchImg = $('<img />')
                     .attr({ src: GM_getResourceURL('searchIcon'), alt: 'Search', role: 'img' })
                     .css(iconCSS);
 
                 const titleExactQuery = `"${releaseTitle.replace(/"/g, '')}"`;
-                const googleTitleUrl = `https://www.google.com/search?q=${encodeURIComponent(titleExactQuery)}`;
-                const $googleTitleLink = $('<a />')
+                const TitleUrl = `https://www.kagi.com/search?q=${encodeURIComponent(titleExactQuery)}`;
+                const $TitleLink = $('<a />')
                     .attr({
-                        href: googleTitleUrl,
+                        href: TitleUrl,
                         target: '_blank',
                         rel: 'noopener noreferrer',
-                        title: 'Search release title on Google',
+                        title: 'Search release title',
                     })
                     .addClass('release-title-action-btn')
                     .css({ ...iconCSS, display: 'inline-block', cursor: 'pointer', marginLeft: '2px' })
                     .append($searchImg.clone());
-                $iconsContainer.append($googleTitleLink);
+                $iconsContainer.append($TitleLink);
 
                 const artists = [];
                 $releaseHeader.find('p.subheader > bdi a[href*="/artist/"]').each(function () {
@@ -261,21 +262,21 @@ $(document).ready(function () {
                         return `"${p.replace(/"/g, '')}"`;
                     })
                     .join(' ');
-                const googleExactUrl = `https://www.google.com/search?q=${encodeURIComponent(exactQuery)}`;
+                const ExactUrl = `https://www.kagi.com/search?q=${encodeURIComponent(exactQuery)}`;
                 const $searchArtistImg = $('<img />')
                     .attr({ src: GM_getResourceURL('searchArtistIcon'), alt: 'Search artist and title', role: 'img' })
                     .css(iconCSS);
-                const $googleExactLink = $('<a />')
+                const $ExactLink = $('<a />')
                     .attr({
-                        href: googleExactUrl,
+                        href: ExactUrl,
                         target: '_blank',
                         rel: 'noopener noreferrer',
-                        title: 'Search Google for exact match (artist(s) + release title)',
+                        title: 'Search for exact match (artist(s) + release title)',
                     })
                     .addClass('release-title-action-btn')
                     .css({ ...iconCSS, display: 'inline-block', cursor: 'pointer', marginLeft: '2px' })
                     .append($searchArtistImg);
-                $iconsContainer.append($googleExactLink);
+                $iconsContainer.append($ExactLink);
             }
 
             if (shouldShowCopyButton) {
