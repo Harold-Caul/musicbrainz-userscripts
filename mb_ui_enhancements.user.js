@@ -26,18 +26,18 @@
 this.$ = this.jQuery = jQuery.noConflict(true);
 
 // Copy release title: menu command to enable/disable (default enabled)
-function setCopyTitleMenu() {
+function setCopyButtonsMenu() {
     if (typeof GM_registerMenuCommand !== 'function') return;
     GM_registerMenuCommand(
-        `${GM_getValue('copyTitleEnabled', true) ? '☑' : '☐'} Copy release title button`,
+        `${GM_getValue('copyButtonsEnabled', true) ? '☑' : '☐'} Copy release title & ID buttons`,
         function () {
-            GM_setValue('copyTitleEnabled', !GM_getValue('copyTitleEnabled', true));
-            setCopyTitleMenu();
+            GM_setValue('copyButtonsEnabled', !GM_getValue('copyButtonsEnabled', true));
+            setCopyButtonsMenu();
         },
-        { autoClose: false, id: 'copyTitle' },
+        { autoClose: false, id: 'copyButtons' },
     );
 }
-setCopyTitleMenu();
+setCopyButtonsMenu();
 
 // Search release title: menu command to enable/disable (default enabled)
 // TODO: Make this into a provider choice menu
@@ -220,7 +220,7 @@ $(document).ready(function () {
         const $h1 = $releaseHeader.children('h1');
         const releaseTitle = $h1.length ? $h1.text().replace(/\s+/g, ' ').trim() : '';
         const shouldShowCopyButton =
-            GM_getValue('copyTitleEnabled', true) &&
+            GM_getValue('copyButtonsEnabled', true) &&
             navigator.clipboard &&
             navigator.clipboard.writeText &&
             typeof GM_getResourceURL === 'function';
@@ -280,33 +280,42 @@ $(document).ready(function () {
             }
 
             if (shouldShowCopyButton) {
-                const $img = $('<img />')
-                    .attr({ src: GM_getResourceURL('copyIcon'), alt: 'Copy', title: 'Copy release title' })
-                    .css({ ...iconCSS, cursor: 'pointer' });
-                const $checkImg = $('<img />')
-                    .attr({ src: GM_getResourceURL('checkIcon'), alt: 'Copied' })
-                    .css(iconCSS);
-                const $errorImg = $('<img />')
-                    .attr({ src: GM_getResourceURL('errorIcon'), alt: 'Copy failed' })
-                    .css(iconCSS);
-                const $wrap = $('<span />').addClass('release-title-action-btn').css({ display: 'inline-block' }).append($img);
-                $wrap.on('click', function () {
-                    navigator.clipboard.writeText(releaseTitle).then(
-                        function () {
-                            $wrap.empty().append($checkImg);
-                            setTimeout(function () {
-                                $wrap.empty().append($img);
-                            }, 3000);
-                        },
-                        function () {
-                            $wrap.empty().append($errorImg);
-                            setTimeout(function () {
-                                $wrap.empty().append($img);
-                            }, 3000);
-                        },
-                    );
-                });
-                $iconsContainer.append($wrap);
+                function makeCopyButton(copyValue, copyLabel) {
+
+                    const $img = $('<img />')
+                        .attr({ src: GM_getResourceURL('copyIcon'), alt: 'Copy ' + copyLabel, title: 'Copy \"' + copyValue + '\"' })
+                        .css({ ...iconCSS, cursor: 'pointer' });
+                    const $checkImg = $('<img />')
+                        .attr({ src: GM_getResourceURL('checkIcon'), alt: 'Copied' })
+                        .css(iconCSS);
+                    const $errorImg = $('<img />')
+                        .attr({ src: GM_getResourceURL('errorIcon'), alt: 'Copy failed' })
+                        .css(iconCSS);
+
+                    const $wrap = $('<span />').addClass('release-clipboard-action-btn').css({ display: 'inline-block' }).append($img);
+                    $wrap.on('click', function () {
+                        navigator.clipboard.writeText(copyValue).then(
+                            function () {
+                                $wrap.empty().append($checkImg);
+                                setTimeout(function () {
+                                    $wrap.empty().append($img);
+                                }, 3000);
+                            },
+                            function () {
+                                $wrap.empty().append($errorImg);
+                                setTimeout(function () {
+                                    $wrap.empty().append($img);
+                                }, 3000);
+                            },
+                        );
+                    });
+
+                    $iconsContainer.append($wrap);
+                }
+
+                makeCopyButton(releaseTitle, "Title");
+                makeCopyButton(mbid, "ID");
+
             }
 
             const $titleLine = $('<span class="release-title-line" />').css({
